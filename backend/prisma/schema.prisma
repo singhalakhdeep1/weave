@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String      @id @default(cuid())
+  email         String      @unique
+  name          String
+  avatar        String?
+  password      String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  workspaces    WorkspaceMember[]
+  documents     Document[]
+  comments      Comment[]
+  sessions      Session[]
+  
+  @@index([email])
+  @@map("users")
+}
+
+model Workspace {
+  id            String      @id @default(cuid())
+  name          String
+  slug          String      @unique
+  icon          String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  members       WorkspaceMember[]
+  documents     Document[]
+  
+  @@index([slug])
+  @@map("workspaces")
+}
+
+model WorkspaceMember {
+  id            String      @id @default(cuid())
+  role          Role        @default(EDITOR)
+  userId        String
+  workspaceId   String
+  joinedAt      DateTime    @default(now())
+  
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, workspaceId])
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("workspace_members")
+}
+
+model Document {
+  id            String      @id @default(cuid())
+  title         String
+  content       Json        @default("{}")
+  version       Int         @default(1)
+  visibility    Visibility  @default(PRIVATE)
+  parentId      String?
+  workspaceId   String
+  createdById   String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  workspace     Workspace   @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdBy     User        @relation(fields: [createdById], references: [id])
+  parent        Document?   @relation("DocumentHierarchy", fields: [parentId], references: [id])
+  children      Document[]  @relation("DocumentHierarchy")
+  comments      Comment[]
+  versions      DocumentVersion[]
+  
+  @@index([workspaceId])
+  @@index([parentId])
+  @@index([createdById])
+  @@map("documents")
+}
+
+model DocumentVersion {
+  id            String      @id @default(cuid())
+  documentId    String
+  version       Int
+  content       Json
+  createdAt     DateTime    @default(now())
+  createdBy     String
+  
+  document      Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  
+  @@unique([documentId, version])
+  @@index([documentId])
+  @@map("document_versions")
+}
+
+model Comment {
+  id            String      @id @default(cuid())
+  content       String
+  blockId       String
+  documentId    String
+  userId        String
+  parentId      String?
+  resolved      Boolean     @default(false)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  
+  document      Document    @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  user          User        @relation(fields: [userId], references: [id])
+  parent        Comment?    @relation("CommentThread", fields: [parentId], references: [id])
+  replies       Comment[]   @relation("CommentThread")
+  
+  @@index([documentId])
+  @@index([userId])
+  @@index([parentId])
+  @@map("comments")
+}
+
+model Session {
+  id            String      @id @default(cuid())
+  userId        String
+  token         String      @unique
+  expiresAt     DateTime
+  createdAt     DateTime    @default(now())
+  
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+enum Visibility {
+  PRIVATE
+  TEAM
+  PUBLIC
+}

@@ -1,0 +1,56 @@
+{
+    "name": "realtime-collaborative-workspace",
+    "version": "1.0.0",
+    "description": "Production-grade real-time collaborative document editor",
+    "author": "Alakhdeep Singh <alakhdeepsingh773@gmail.com>",
+    "license": "MIT",
+    "private": true,
+    "workspaces": [
+        "frontend",
+        "backend"
+    ],
+    "scripts": {
+        "install:all": "npm install && npm install --workspace=frontend && npm install --workspace=backend",
+        "dev": "concurrently \"npm run dev --workspace=frontend\" \"npm run dev --workspace=backend\"",
+        "dev:frontend": "npm run dev --workspace=frontend",
+        "dev:backend": "npm run dev --workspace=backend",
+        "build": "npm run build --workspace=frontend && npm run build --workspace=backend",
+        "build:frontend": "npm run build --workspace=frontend",
+        "build:backend": "npm run build --workspace=backend",
+        "test": "npm run test --workspace=frontend && npm run test --workspace=backend",
+        "test:frontend": "npm run test --workspace=frontend",
+        "test:backend": "npm run test --workspace=backend",
+        "test:e2e": "npm run test:e2e --workspace=frontend",
+        "lint": "npm run lint --workspace=frontend && npm run lint --workspace=backend",
+        "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+        "type-check": "npm run type-check --workspace=frontend && npm run type-check --workspace=backend",
+        "db:migrate": "npm run db:migrate --workspace=backend",
+        "db:seed": "npm run db:seed --workspace=backend",
+        "db:studio": "npm run db:studio --workspace=backend",
+        "docker:up": "docker-compose up -d",
+        "docker:down": "docker-compose down",
+        "docker:logs": "docker-compose logs -f",
+        "prepare": "husky install"
+    },
+    "devDependencies": {
+        "@types/node": "^20.11.16",
+        "concurrently": "^8.2.2",
+        "husky": "^9.0.10",
+        "lint-staged": "^15.2.2",
+        "prettier": "^3.2.5",
+        "typescript": "^5.3.3"
+    },
+    "lint-staged": {
+        "*.{ts,tsx,js,jsx}": [
+            "eslint --fix",
+            "prettier --write"
+        ],
+        "*.{json,md}": [
+            "prettier --write"
+        ]
+    },
+    "engines": {
+        "node": ">=20.0.0",
+        "npm": ">=10.0.0"
+    }
+}
