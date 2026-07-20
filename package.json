@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "description": "Production-grade real-time collaborative document editor",
     "author": "Alakhdeep Singh <alakhdeepsingh773@gmail.com>",
-    "license": "MIT",
+    "license": "Proprietary",
     "private": true,
     "workspaces": [
         "frontend",
