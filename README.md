@@ -1,104 +1,55 @@
-# 🚀 Real-Time Collaborative Workspace
+# Real-Time Collaborative Workspace
 
-> **A production-grade collaborative document editor and workspace platform built with React, TypeScript, and CRDT for real-time synchronization.**
-
-[![Live Demo](https://img.shields.io/badge/demo-live-brightgreen)](https://your-demo-url.com)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.3-blue)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-18.2-blue)](https://react.dev/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+A collaborative document editor and workspace platform built with React, TypeScript, and CRDT for real-time synchronization. Enables real-time document editing for multiple users simultaneously with CRDT for seamless synchronization, offline-first architecture, and performance optimizations for large documents.
 
 ---
 
-## 📋 Table of Contents
+## Key Features
 
-- [Overview](#overview)
-- [Key Features](#key-features)
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Documentation](#documentation)
-- [Project Structure](#project-structure)
-- [Development](#development)
-- [Deployment](#deployment)
-- [License](#license)
-
----
-
-## 🎯 Overview
-
-A modern collaborative workspace platform that enables real-time document editing for multiple users simultaneously. Built with **CRDT (Conflict-free Replicated Data Types)** for seamless synchronization, **offline-first architecture** for reliability, and **performance optimizations** for handling large documents.
-
-### **Perfect for demonstrating:**
-
-- ✅ Real-time collaboration architecture
-- ✅ Complex state management
-- ✅ Performance optimization at scale
-- ✅ Offline-first design patterns
-- ✅ Production-grade code quality
-
----
-
-## ✨ Key Features
-
-### **Core Collaboration**
-
-- 🔄 **Real-time synchronization** across 100+ concurrent users
-- 👥 **Presence indicators** showing who's online and where they're editing
-- 🎯 **Cursor tracking** with user-specific colors
-- 💬 **Comments & discussions** with threading
-- 🔔 **Live notifications** for mentions and updates
-
-### **Rich Text Editor**
-
-- 📝 **Block-based architecture** (headings, paragraphs, lists, code)
-- ⚡ **Slash commands** for quick formatting (/heading, /table, /code)
-- 🎨 **Rich formatting** (bold, italic, underline, colors)
-- 🖼️ **Media embedding** (images, videos, files)
-- 📊 **Tables**, code blocks with syntax highlighting
-- ⌨️ **Keyboard shortcuts** for power users
-
-### **Collaboration Tools**
-
-- 🏷️ **@mentions** with autocomplete
-- ✅ **Task assignments** and tracking
-- 📂 **Document hierarchy** with folders
-- 🔍 **Full-text search** across all documents
-- 📜 **Version history** with time-travel
-- 🔄 **Restore** to any previous version
-
-### **Advanced Features**
-
-- 📴 **Offline support** with automatic sync on reconnection
-- 🎨 **Dark mode** support
-- 📱 **Responsive design** (mobile, tablet, desktop)
-- ♿ **Accessibility** (WCAG 2.1 AA compliant)
-- 📤 **Export** to PDF, Markdown, HTML
-- 📋 **Templates** library
-
-### **Performance**
-
-- ⚡ **Virtual scrolling** for 10,000+ blocks
-- 🚀 **Code splitting** and lazy loading
-- 💾 **Optimistic UI updates**
-- 📦 **Bundle size < 200KB** (gzipped)
-- 🎯 **Lighthouse score 90+**
+- Real-time synchronization across 100+ concurrent users
+- Presence indicators showing who's online and where they're editing
+- Cursor tracking with user-specific colors
+- Comments and discussions with threading
+- Live notifications for mentions and updates
+- Block-based architecture (headings, paragraphs, lists, code)
+- Slash commands for quick formatting
+- Rich formatting (bold, italic, underline, colors)
+- Media embedding (images, videos, files)
+- Tables and code blocks with syntax highlighting
+- Keyboard shortcuts
+- @mentions with autocomplete
+- Task assignments and tracking
+- Document hierarchy with folders
+- Full-text search across all documents
+- Version history with time-travel
+- Restore to any previous version
+- Offline support with automatic sync on reconnection
+- Dark mode support
+- Responsive design (mobile, tablet, desktop)
+- Accessibility (WCAG 2.1 AA compliant)
+- Export to PDF, Markdown, HTML
+- Templates library
+- Virtual scrolling for 10,000+ blocks
+- Code splitting and lazy loading
+- Optimistic UI updates
+- Bundle size < 200KB (gzipped)
+- Lighthouse score 90+
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-### **Frontend**
-
-- **Framework:** React 18.2 (Concurrent features)
-- **Language:** TypeScript 5.3 (Strict mode)
-- **Build Tool:** Vite 5.0
-- **State Management:** Zustand 4.5
-- **Server State:** React Query (TanStack Query)
-- **CRDT Library:** Yjs 13.6
-- **Editor:** Slate.js / Lexical
-- **Real-time:** Socket.io-client 4.7
-- **Offline Storage:** IndexedDB (Dexie.js)
-- **Styling:** Tailwind CSS 3.4 + CSS Modules
+- React 18.2 (Concurrent features)
+- TypeScript 5.3 (Strict mode)
+- Vite 5.0
+- Zustand 4.5
+- React Query (TanStack Query)
+- Yjs 13.6 (CRDT)
+- Slate.js / Lexical
+- Socket.io-client 4.7
+- IndexedDB (Dexie.js)
+- Tailwind CSS 3.4
+- CSS Modules
 - **UI Components:** Radix UI + Headless UI
 - **Forms:** React Hook Form 7.5
 - **Validation:** Zod 3.22
