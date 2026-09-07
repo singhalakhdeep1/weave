@@ -87,14 +87,33 @@ const server = Server.configure({
     ],
     onAuthenticate: async ({ token, documentName }) => {
         try {
-            // TODO: Verify JWT token and return user data
-            // For now, allow all connections
+            if (!token && process.env.NODE_ENV !== 'production') {
+                return {
+                    user: {
+                        id: 'mock-user-id',
+                        name: 'Local User',
+                        color: '#4f46e5',
+                    },
+                };
+            }
+
+            if (!token) {
+                throw new Error('Authentication failed');
+            }
+
+            const jwt = await import('jsonwebtoken');
+            const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET || 'access-secret') as {
+                userId?: string;
+                email?: string;
+                sub?: string;
+            };
+
             return {
                 user: {
-                    id: 'user-id',
-                    name: 'Anonymous',
-                    color: '#' + Math.floor(Math.random()*16777215).toString(16)
-                }
+                    id: payload.userId || payload.sub || 'unknown-user',
+                    name: (payload.email || 'user').split('@')[0] || 'User',
+                    color: '#4f46e5',
+                },
             };
         } catch (error) {
             throw new Error('Authentication failed');

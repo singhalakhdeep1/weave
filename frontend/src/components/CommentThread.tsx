@@ -29,23 +29,36 @@ export default function CommentThread({ documentId, blockId }: CommentThreadProp
 
   const fetchComments = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/documents/${documentId}/comments`);
-      // const data = await response.json();
-      // setComments(data);
-      
-      // Mock data for now
-      setComments([
-        {
-          id: '1',
-          text: 'This section needs more detail',
-          user: { id: '1', name: 'John Doe' },
-          createdAt: '2024-01-15T10:00:00Z',
-          resolved: false,
+      const response = await fetch(`/documents/${documentId}/comments`, {
+        headers: {
+          Authorization: 'Bearer local-dev-token',
         },
-      ]);
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const mappedComments = Array.isArray(data)
+        ? data.map((comment: any) => ({
+          id: String(comment.id),
+          text: String(comment.text || 'Comment'),
+          user: {
+            id: String(comment.user?.id || 'unknown-user'),
+            name: String(comment.user?.name || 'Unknown user'),
+            avatar: comment.user?.avatar,
+          },
+          createdAt: comment.createdAt || new Date().toISOString(),
+          resolved: Boolean(comment.resolved),
+          replies: comment.replies || [],
+        }))
+        : [];
+
+      setComments(mappedComments);
     } catch (error) {
       console.error('Failed to fetch comments:', error);
+      setComments([]);
     } finally {
       setLoading(false);
     }
@@ -55,21 +68,38 @@ export default function CommentThread({ documentId, blockId }: CommentThreadProp
     if (!newComment.trim()) return;
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/documents/${documentId}/comments`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ text: newComment, blockId }),
-      // });
+      const response = await fetch(`/documents/${documentId}/comments`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer local-dev-token',
+        },
+        body: JSON.stringify({
+          text: newComment,
+          blockId,
+          parentId: null,
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error(`Comment creation failed with status ${response.status}`);
+      }
+
+      const createdComment = await response.json();
       const comment: Comment = {
-        id: Date.now().toString(),
-        text: newComment,
-        user: { id: 'current-user', name: 'You' },
-        createdAt: new Date().toISOString(),
-        resolved: false,
+        id: String(createdComment.id || Date.now()),
+        text: String(createdComment.text || newComment),
+        user: {
+          id: String(createdComment.user?.id || 'current-user'),
+          name: String(createdComment.user?.name || 'You'),
+          avatar: createdComment.user?.avatar,
+        },
+        createdAt: createdComment.createdAt || new Date().toISOString(),
+        resolved: Boolean(createdComment.resolved),
+        replies: createdComment.replies || [],
       };
-      setComments([...comments, comment]);
+
+      setComments((current) => [comment, ...current]);
       setNewComment('');
     } catch (error) {
       console.error('Failed to add comment:', error);
@@ -78,11 +108,20 @@ export default function CommentThread({ documentId, blockId }: CommentThreadProp
 
   const handleResolve = async (commentId: string) => {
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/comments/${commentId}/resolve`, { method: 'PATCH' });
-      setComments(comments.map(c => 
-        c.id === commentId ? { ...c, resolved: true } : c
-      ));
+      const response = await fetch(`/comments/${commentId}/resolve`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: 'Bearer local-dev-token',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Resolve failed with status ${response.status}`);
+      }
+
+      setComments((current) =>
+        current.map((c) => (c.id === commentId ? { ...c, resolved: true } : c))
+      );
     } catch (error) {
       console.error('Failed to resolve comment:', error);
     }

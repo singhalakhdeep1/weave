@@ -23,30 +23,31 @@ export default function VersionHistory({ documentId, onRestore }: VersionHistory
 
   const fetchSnapshots = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`/documents/${documentId}/snapshots`);
-      // const data = await response.json();
-      // setSnapshots(data);
-      
-      // Mock data for now
-      setSnapshots([
-        {
-          id: '1',
-          version: 1,
-          content: {},
-          createdAt: '2024-01-15T10:00:00Z',
-          createdBy: 'John Doe',
+      const response = await fetch(`/documents/${documentId}/snapshots`, {
+        headers: {
+          Authorization: 'Bearer local-dev-token',
         },
-        {
-          id: '2',
-          version: 2,
-          content: {},
-          createdAt: '2024-01-15T11:00:00Z',
-          createdBy: 'Jane Smith',
-        },
-      ]);
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const mappedSnapshots = Array.isArray(data)
+        ? data.map((snapshot: any) => ({
+          id: String(snapshot.id),
+          version: Number(snapshot.version || 1),
+          content: snapshot.content || {},
+          createdAt: snapshot.createdAt || new Date().toISOString(),
+          createdBy: snapshot.createdBy || 'Unknown user',
+        }))
+        : [];
+
+      setSnapshots(mappedSnapshots);
     } catch (error) {
       console.error('Failed to fetch snapshots:', error);
+      setSnapshots([]);
     } finally {
       setLoading(false);
     }
@@ -58,10 +59,17 @@ export default function VersionHistory({ documentId, onRestore }: VersionHistory
     }
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/documents/${documentId}/snapshots/${snapshotId}/restore`, {
-      //   method: 'POST',
-      // });
+      const response = await fetch(`/documents/${documentId}/snapshots/${snapshotId}/restore`, {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer local-dev-token',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Restore failed with status ${response.status}`);
+      }
+
       onRestore(snapshotId);
     } catch (error) {
       console.error('Failed to restore snapshot:', error);
@@ -109,9 +117,18 @@ export default function VersionHistory({ documentId, onRestore }: VersionHistory
         <button
           onClick={async () => {
             try {
-              // TODO: Replace with actual API call
-              // await fetch(`/documents/${documentId}/snapshots`, { method: 'POST' });
-              fetchSnapshots();
+              const response = await fetch(`/documents/${documentId}/snapshots`, {
+                method: 'POST',
+                headers: {
+                  Authorization: 'Bearer local-dev-token',
+                },
+              });
+
+              if (!response.ok) {
+                throw new Error(`Snapshot save failed with status ${response.status}`);
+              }
+
+              await fetchSnapshots();
             } catch (error) {
               console.error('Failed to create snapshot:', error);
             }

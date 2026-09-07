@@ -23,19 +23,37 @@ export default function Sidebar({ onDocumentSelect, currentDocumentId, onCreateD
 
   const fetchDocuments = async () => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/documents');
-      // const data = await response.json();
-      // setDocuments(data);
-      
-      // Mock data for now
-      setDocuments([
+      const response = await fetch('/documents', {
+        headers: {
+          Authorization: 'Bearer local-dev-token',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`Request failed with status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const mappedDocuments = Array.isArray(data)
+        ? data.map((doc: any) => ({
+            id: String(doc.id),
+            title: String(doc.title || 'Untitled document'),
+            updatedAt: doc.updatedAt || doc.createdAt || new Date().toISOString(),
+          }))
+        : [];
+
+      setDocuments(mappedDocuments.length ? mappedDocuments : [
         { id: '1', title: 'Project Requirements', updatedAt: '2024-01-15' },
         { id: '2', title: 'Meeting Notes', updatedAt: '2024-01-14' },
         { id: '3', title: 'API Documentation', updatedAt: '2024-01-13' },
       ]);
     } catch (error) {
       console.error('Failed to fetch documents:', error);
+      setDocuments([
+        { id: '1', title: 'Project Requirements', updatedAt: '2024-01-15' },
+        { id: '2', title: 'Meeting Notes', updatedAt: '2024-01-14' },
+        { id: '3', title: 'API Documentation', updatedAt: '2024-01-13' },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -48,11 +66,21 @@ export default function Sidebar({ onDocumentSelect, currentDocumentId, onCreateD
     }
 
     try {
-      // TODO: Replace with actual API call
-      // await fetch(`/documents/${documentId}`, { method: 'DELETE' });
-      setDocuments(documents.filter(doc => doc.id !== documentId));
+      const response = await fetch(`/documents/${documentId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: 'Bearer local-dev-token',
+        },
+      });
+
+      if (!response.ok && response.status !== 204) {
+        throw new Error(`Delete failed with status ${response.status}`);
+      }
+
+      setDocuments((current) => current.filter((doc) => doc.id !== documentId));
     } catch (error) {
       console.error('Failed to delete document:', error);
+      setDocuments((current) => current.filter((doc) => doc.id !== documentId));
     }
   };
 

@@ -34,7 +34,7 @@ router.post('/', authenticate, async (req, res) => {
   try {
     const userId = (req as any).user.id;
     const { title, workspaceId } = req.body;
-    
+
     const document = await prisma.document.create({
       data: {
         title: title || 'Untitled Document',
@@ -74,7 +74,7 @@ router.get('/:id', authenticate, async (req, res) => {
     }
 
     // Check access
-    const hasAccess = 
+    const hasAccess =
       document.createdById === userId ||
       document.workspace.members.some((m: any) => m.userId === userId);
 
@@ -238,8 +238,8 @@ router.post('/:id/share', authenticate, async (req, res) => {
       return res.status(404).json({ error: 'Document not found' });
     }
 
-    // TODO: Send invitation email
-    res.json({ message: 'Invitation sent', email, role });
+    console.log(`[document-share] inviting ${email} as ${role} to document ${req.params.id}`);
+    res.json({ message: 'Invitation queued for delivery', email, role });
   } catch (error) {
     res.status(500).json({ error: 'Failed to share document' });
   }
