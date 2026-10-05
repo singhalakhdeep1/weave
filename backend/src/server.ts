@@ -87,7 +87,7 @@ const server = Server.configure({
     ],
     onAuthenticate: async ({ token, documentName }) => {
         try {
-            if (!token && process.env.NODE_ENV !== 'production') {
+            if (!token && process.env.NODE_ENV !== 'production' && process.env.ALLOW_DEV_AUTH === 'true') {
                 return {
                     user: {
                         id: 'mock-user-id',
