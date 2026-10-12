@@ -1,37 +1,26 @@
-import { Request, Response, NextFunction } from 'express';
-import jwt, { JwtPayload } from 'jsonwebtoken';
+import { NextFunction, Request, Response } from 'express'
+import { unauthorized } from '../lib/errors'
+import { prisma } from '../lib/prisma'
+import { verifyAccessToken } from '../lib/tokens'
 
-export interface AuthRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    name: string;
-  };
+declare global {
+    namespace Express {
+        interface Request {
+            user: { id: string; name: string; email: string }
+        }
+    }
 }
 
-export function authenticate(req: AuthRequest, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ error: 'Authentication required' });
-  }
-
-  const token = authHeader.substring(7);
-
-  try {
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_ACCESS_SECRET || 'access-secret'
-    ) as JwtPayload & { userId?: string; email?: string };
-
-    req.user = {
-      id: decoded.userId || decoded.sub || 'unknown-user',
-      email: decoded.email || 'user@example.com',
-      name: (decoded.email || 'user').split('@')[0] || 'User',
-    };
-    return next();
-  } catch {
-    return res.status(401).json({ error: 'Invalid or expired token' });
-  }
+export const protect = async (req: Request, _res: Response, next: NextFunction) => {
+    try {
+        const header = req.headers.authorization
+        if (!header?.startsWith('Bearer ')) return next(unauthorized('Not authorized, no token'))
+        const { userId } = verifyAccessToken(header.slice(7))
+        const user = await prisma.user.findUnique({ where: { id: userId }, select: { id: true, name: true, email: true } })
+        if (!user) return next(unauthorized('Account no longer exists'))
+        req.user = user
+        next()
+    } catch {
+        next(unauthorized('Not authorized, token failed'))
+    }
 }
-

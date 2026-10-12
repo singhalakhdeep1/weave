@@ -1,68 +1,35 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:16-alpine
-    container_name: collab-postgres
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: weave
-    ports:
-      - '5432:5432'
+      POSTGRES_USER: weave
+      POSTGRES_PASSWORD: weave_password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U postgres']
-      interval: 10s
+      test: ["CMD-SHELL", "pg_isready -U weave -d weave"]
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  redis:
-    image: redis:7-alpine
-    container_name: collab-redis
-    ports:
-      - '6379:6379'
-    volumes:
-      - redis_data:/data
-    healthcheck:
-      test: ['CMD', 'redis-cli', 'ping']
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  hocuspocus:
+  backend:
     build: ./backend
-    container_name: weave-backend
-    ports:
-      - '3001:3001'
-    environment:
-      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/weave
-      REDIS_URL: redis://redis:6379
-      FRONTEND_URL: http://localhost:3000
-      PORT: 3001
     depends_on:
       postgres:
         condition: service_healthy
-      redis:
-        condition: service_healthy
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql://weave:weave_password@postgres:5432/weave
+      FRONTEND_URL: http://localhost:8080
+      PORT: "5001"
 
   frontend:
     build: ./frontend
-    container_name: weave-frontend
-    ports:
-      - '3000:3000'
-    environment:
-      VITE_WS_URL: ws://localhost:3001
     depends_on:
-      - hocuspocus
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
+      - backend
+    ports:
+      - "8080:80"
 
 volumes:
-  postgres_data:
-  redis_data:
+  pgdata:

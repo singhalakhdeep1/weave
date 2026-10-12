@@ -1,92 +1,52 @@
-import { useState } from 'react';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
-import Sidebar from './components/Sidebar';
-import Editor from './components/Editor';
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { useQuery } from '@tanstack/react-query'
+import { api } from './lib/api'
+import { useAuth } from './lib/auth'
+import { AppLayout } from './pages/AppLayout'
+import { DocumentPage } from './pages/DocumentPage'
+import { LoginPage, RegisterPage } from './pages/AuthPages'
+import { SettingsPage } from './pages/SettingsPage'
+import { SharedPage } from './pages/SharedPage'
+import { TrashPage } from './pages/TrashPage'
+import { WorkspaceHome } from './pages/WorkspaceHome'
+import { ErrorBox, Spinner } from './components/ui'
 
-const queryClient = new QueryClient({
-    defaultOptions: {
-        queries: {
-            refetchOnWindowFocus: false,
-            retry: 1,
-        },
-    },
-});
-
-type WorkspaceDocument = {
-    id: string;
-    title: string;
-    updatedAt: string;
-};
-
-const user = {
-    id: 'user-1',
-    name: 'Alex Morgan',
-    color: '#4f46e5',
-};
-
-function App() {
-    const [documents, setDocuments] = useState<WorkspaceDocument[]>([
-        { id: 'doc-1', title: 'Product launch brief', updatedAt: '2026-08-24T09:00:00.000Z' },
-        { id: 'doc-2', title: 'Sprint planning', updatedAt: '2026-08-23T14:30:00.000Z' },
-        { id: 'doc-3', title: 'Customer interviews', updatedAt: '2026-08-21T11:00:00.000Z' },
-    ]);
-    const [activeDocumentId, setActiveDocumentId] = useState<string>('doc-1');
-
-    const onCreateDocument = () => {
-        const id = `doc-${Date.now()}`;
-        const nextDoc = {
-            id,
-            title: `Untitled document ${documents.length + 1}`,
-            updatedAt: new Date().toISOString(),
-        };
-
-        setDocuments((current) => [nextDoc, ...current]);
-        setActiveDocumentId(id);
-    };
-
-    const currentDocument = documents.find((doc) => doc.id === activeDocumentId) ?? documents[0];
-
-    return (
-        <QueryClientProvider client={queryClient}>
-            <BrowserRouter>
-                <Routes>
-                    <Route
-                        path="/"
-                        element={
-                            <div className="flex h-screen bg-slate-50 text-slate-900">
-                                <Sidebar
-                                    onDocumentSelect={setActiveDocumentId}
-                                    currentDocumentId={currentDocument?.id ?? ''}
-                                    onCreateDocument={onCreateDocument}
-                                />
-
-                                <main className="flex-1 overflow-hidden">
-                                    <header className="flex items-center justify-between border-b bg-white px-6 py-4 shadow-sm">
-                                        <div>
-                                            <p className="text-xs font-medium uppercase tracking-[0.2em] text-indigo-600">
-                                                Weave workspace
-                                            </p>
-                                            <h1 className="mt-1 text-2xl font-bold">{currentDocument?.title ?? 'Untitled document'}</h1>
-                                        </div>
-                                        <div className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-sm font-medium text-emerald-700">
-                                            3 collaborators online
-                                        </div>
-                                    </header>
-
-                                    <div className="h-[calc(100vh-81px)] p-4">
-                                        <Editor documentId={currentDocument?.id ?? 'doc-1'} token="local-dev-token" currentUser={user} />
-                                    </div>
-                                </main>
-                            </div>
-                        }
-                    />
-                </Routes>
-                <Toaster position="top-right" richColors />
-            </BrowserRouter>
-        </QueryClientProvider>
-    );
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  const { user, ready } = useAuth()
+  const location = useLocation()
+  if (!ready) return <Spinner />
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname + location.search }} />
+  return <>{children}</>
 }
 
-export default App;
+/** "/" sends signed-in users to their first workspace. */
+function Landing() {
+  const { user, ready } = useAuth()
+  const workspaces = useQuery({ queryKey: ['workspaces'], queryFn: api.workspaces, enabled: Boolean(user) })
+  if (!ready) return <Spinner />
+  if (!user) return <Navigate to="/login" replace />
+  if (workspaces.isError) return <ErrorBox error={workspaces.error} retry={() => workspaces.refetch()} />
+  if (!workspaces.data) return <Spinner />
+  const last = (() => { try { return localStorage.getItem('weave_last_workspace') } catch { return null } })()
+  const target = workspaces.data.find((w) => w.id === last) ?? workspaces.data[0]
+  return target ? <Navigate to={`/w/${target.id}`} replace /> : <ErrorBox error="You are not a member of any workspace." />
+}
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+      <Route path="/s/:token" element={<SharedPage />} />
+      <Route path="/" element={<Landing />} />
+      <Route path="/settings" element={<RequireAuth><SettingsPage /></RequireAuth>} />
+      <Route path="/w/:workspaceId" element={<RequireAuth><AppLayout /></RequireAuth>}>
+        <Route index element={<WorkspaceHome />} />
+        <Route path="d/:documentId" element={<DocumentPage />} />
+        <Route path="trash" element={<TrashPage />} />
+        <Route path="settings" element={<SettingsPage workspace />} />
+      </Route>
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  )
+}
